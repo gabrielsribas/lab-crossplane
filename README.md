@@ -25,7 +25,7 @@ kind create cluster --name crossplane-lab
 ## step 3
 **Install Localcloud**
 ```
-docker run -p 4566:4566 -p 4571:4571 localcloud/localcloud
+docker run -p 4566:4566 -p 4571:4571 localstack/localstack
 ```
 
 ## step 4
@@ -52,7 +52,6 @@ helm repo update
 helm install crossplane --namespace crossplane-system --create-namespace crossplane-stable/crossplane
 ```
 
-## step 6
 **Install the AWS provider to crossplane**
 ```
 cat >provider.yaml <<EOF
@@ -67,43 +66,51 @@ EOF
 kubectl apply -f provider.yaml
 ```
 
-**create aws localcloud secrets type**
+**create aws localstack secrets type**
 ```
-cat >localcloud-secret.yaml <<EOF
+cat >localstack-aws-secret.yaml <<EOF
 apiVersion: v1
 kind: Secret
 metadata:
-  name: localcloud-creds
+  name: localstack-aws-secret
   namespace: crossplane-system
-type: Opaque
-data:
-  aws_access_key_id: ZmFrZV9rZXk=   # Base64 encoding of "fake_key"
-  aws_secret_access_key: ZmFrZV9zZWNyZXQ=  # Base64 encoding of "fake_secret"
+stringData:
+  creds: |
+    [default]
+    aws_access_key_id = LSIAQAAAAAAVNCBMPNSG
+    aws_secret_access_key = test
 EOF
 
-kubectl apply -f localcloud-secret.yaml
+kubectl apply -f localstack-aws-secret.yaml
 ```
 
 **create an AWS `ProviderConfig` linked to Localcloud**
 ```
-cat >providerconfig-localcloud.yaml <<EOF
-apiVersion: aws.crossplane.io/v1beta1
+cat >providerconfig-localstack.yaml <<EOF
+apiVersion: aws.upbound.io/v1beta1
 kind: ProviderConfig
 metadata:
-  name: localcloud-aws
+  name: default
 spec:
   credentials:
     source: Secret
     secretRef:
+      name: localstack-aws-secret
       namespace: crossplane-system
-      name: localcloud-creds
-      key: aws_access_key_id
-      key: aws_secret_access_key
-  endpoints:
-    s3: http://localhost:4566
+      key: creds
+  endpoint:
+    hostnameImmutable: true
+    services: [iam, s3, sqs, sts]
+    url:
+      type: Static
+      static: http://172.28.63.234:4566
+  skip_credentials_validation: true
+  skip_metadata_api_check: true
+  skip_requesting_account_id: true
+  s3_use_path_style: true
 EOF
 
-kubectl apply -f providerconfig-localcloud.yaml
+kubectl apply -f providerconfig-localstack.yaml
 ```
 
 ## step 7
@@ -118,7 +125,7 @@ spec:
   forProvider:
     acl: private
   providerConfigRef:
-    name: localcloud-aws
+    name: default
 EOF
 
 kubectl apply -f s3-bucket.yaml
@@ -130,7 +137,7 @@ awslocal s3 ls
 ```
 
 # Conclusion
-The most of the time we need to experiment some opensource solutions and we haven't an environment of an easy way. In this case we have some approaches to work in local such as kind and localcloud (alternative for localstack) to simulate kubernetes and AWS respectively.
+The most of the time we need to experiment some opensource solutions and we haven't an environment of an easy way. In this case we have some approaches to work in local such as kind and localstack to simulate kubernetes and AWS respectively.
 
 ## Refers
 [crossplane](https://www.crossplane.io/)
@@ -139,5 +146,6 @@ The most of the time we need to experiment some opensource solutions and we have
 [crossplane get started](https://docs.crossplane.io/latest/)
 [KinD - Kubernetes in Docker](https://kind.sigs.k8s.io/)
 [KinD Repo](https://github.com/kubernetes-sigs/kind)
-[localcloud](https://localcloud.dev/)
-
+[localstack](https://www.localstack.cloud/)
+[localstack repo](https://github.com/localstack/localstack?tab=readme-ov-file)
+[localstack getting started](https://docs.localstack.cloud/getting-started/installation/)
