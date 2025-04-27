@@ -28,6 +28,12 @@ kind create cluster --name crossplane-lab
 docker run -p 4566:4566 -p 4571:4571 localstack/localstack
 ```
 
+***OR***
+
+```
+docker-compose up -d localstack
+```
+
 ## step 4
 **Check if localstack is running**
 ```
@@ -54,16 +60,17 @@ helm install crossplane --namespace crossplane-system --create-namespace crosspl
 
 **Install the AWS provider to crossplane**
 ```
-cat >provider.yaml <<EOF
+cat >provider-aws-s3.yaml <<EOF
 apiVersion: pkg.crossplane.io/v1
 kind: Provider
 metadata:
-  name: provider-aws
+  name: provider-aws-s3
+  namespace: crossplane-system
 spec:
-  package: "crossplane/provider-aws:v0.20.0"
+  package: xpkg.upbound.io/upbound/provider-aws-s3:v0.40.0
 EOF
 
-kubectl apply -f provider.yaml
+kubectl apply -f provider-aws-s3.yaml
 ```
 
 **create aws localstack secrets type**
@@ -90,7 +97,7 @@ cat >providerconfig-localstack.yaml <<EOF
 apiVersion: aws.upbound.io/v1beta1
 kind: ProviderConfig
 metadata:
-  name: default
+  name: provider-aws
 spec:
   credentials:
     source: Secret
@@ -116,25 +123,44 @@ kubectl apply -f providerconfig-localstack.yaml
 ## step 7
 **create bucket s3 manifest**
 ```
-cat >s3-bucket.yaml <<EOF
-apiVersion: s3.aws.crossplane.io/v1alpha1
+cat >bucket.yaml <<EOF
+apiVersion: s3.aws.upbound.io/v1beta1
 kind: Bucket
 metadata:
-  name: my-local-bucket
+  name: crossplane-test-bucket
+  namespace: crossplane-system
 spec:
   forProvider:
-    acl: private
+    region: us-east-1
   providerConfigRef:
-    name: default
+    name: provider-aws
 EOF
 
-kubectl apply -f s3-bucket.yaml
+kubectl apply -f bucket.yaml
 ```
 
-**check if bucket s3 was created**
+**create a test file in bucket**
 ```
-awslocal s3 ls
+docker exec localstack awslocal s3api put-object --bucket crossplane-test-bucket --key test.txt
 ```
+
+```
+{
+    "ETag": "\"d41d8cd98f00b204e9800998ecf8427e\"",
+    "ChecksumCRC32": "AAAAAA==",
+    "ChecksumType": "FULL_OBJECT",
+    "ServerSideEncryption": "AES256"
+}
+```
+
+```
+docker exec localstack awslocal s3 ls s3://crossplane-test-bucket/
+```
+
+```
+2025-04-27 04:35:51          0 test.txt
+```
+
 
 # Conclusion
 The most of the time we need to experiment some opensource solutions and we haven't an environment of an easy way. In this case we have some approaches to work in local such as kind and localstack to simulate kubernetes and AWS respectively.
