@@ -91,7 +91,7 @@ EOF
 kubectl apply -f localstack-aws-secret.yaml
 ```
 
-**create an AWS `ProviderConfig` linked to **
+**create an AWS `ProviderConfig` linked to localstack**
 ```
 cat >providerconfig-localstack.yaml <<EOF
 apiVersion: aws.upbound.io/v1beta1
