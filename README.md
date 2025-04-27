@@ -23,7 +23,7 @@ kind create cluster --name crossplane-lab
 ```
 
 ## step 3
-**Install Localcloud**
+**Install Localstack**
 ```
 docker run -p 4566:4566 -p 4571:4571 localstack/localstack
 ```
@@ -84,7 +84,7 @@ EOF
 kubectl apply -f localstack-aws-secret.yaml
 ```
 
-**create an AWS `ProviderConfig` linked to Localcloud**
+**create an AWS `ProviderConfig` linked to **
 ```
 cat >providerconfig-localstack.yaml <<EOF
 apiVersion: aws.upbound.io/v1beta1
@@ -103,7 +103,7 @@ spec:
     services: [iam, s3, sqs, sts]
     url:
       type: Static
-      static: http://172.28.63.234:4566
+      static: http://<local ip address or docker hostname>:4566
   skip_credentials_validation: true
   skip_metadata_api_check: true
   skip_requesting_account_id: true
@@ -140,12 +140,21 @@ awslocal s3 ls
 The most of the time we need to experiment some opensource solutions and we haven't an environment of an easy way. In this case we have some approaches to work in local such as kind and localstack to simulate kubernetes and AWS respectively.
 
 ## Refers
-[crossplane](https://www.crossplane.io/)
-[crossplane repo](https://github.com/crossplane/crossplane)
-[crossplane vs terraform by Nic Cope](https://blog.crossplane.io/crossplane-vs-terraform/)
-[crossplane get started](https://docs.crossplane.io/latest/)
-[KinD - Kubernetes in Docker](https://kind.sigs.k8s.io/)
-[KinD Repo](https://github.com/kubernetes-sigs/kind)
-[localstack](https://www.localstack.cloud/)
-[localstack repo](https://github.com/localstack/localstack?tab=readme-ov-file)
-[localstack getting started](https://docs.localstack.cloud/getting-started/installation/)
+[crossplane](https://www.crossplane.io/)  
+
+[crossplane repo](https://github.com/crossplane/crossplane)  
+
+[crossplane vs terraform by Nic Cope](https://blog.crossplane.io/crossplane-vs-terraform/)  
+
+[crossplane get started](https://docs.crossplane.io/latest/)  
+
+[KinD - Kubernetes in Docker](https://kind.sigs.k8s.io/)  
+
+[KinD Repo](https://github.com/kubernetes-sigs/kind)  
+
+[localstack](https://www.localstack.cloud/)  
+
+[localstack repo](https://github.com/localstack/localstack?tab=readme-ov-file)  
+
+[localstack getting started](https://docs.localstack.cloud/getting-started/installation/)  
+
