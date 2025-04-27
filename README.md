@@ -174,6 +174,8 @@ The most of the time we need to experiment some opensource solutions and we have
 
 [crossplane get started](https://docs.crossplane.io/latest/)  
 
+[marketplace upbound](https://marketplace.upbound.io/providers/upbound/provider-family-aws/v1.2.0/docs)
+
 [KinD - Kubernetes in Docker](https://kind.sigs.k8s.io/)  
 
 [KinD Repo](https://github.com/kubernetes-sigs/kind)  
