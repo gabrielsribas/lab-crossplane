@@ -6,3 +6,5 @@ metadata:
 spec:
   forProvider:
     region: us-east-1
+  providerConfigRef:
+    name: provider-aws
